@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trắc Nghiệm Lịch Sử Địa Phương 11</title>
+    <!-- Tải Tailwind CSS và font Inter -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Thiết lập font Inter, màu nền nhẹ nhàng */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Xanh nhạt */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            font-size: 18px; 
+        }
+
+        /* Thẻ bao ngoài chính (Cartoon look) */
+        .card {
+            background-color: #ffffff;
+            border: 4px solid #3b82f6; /* Viền xanh đậm, dày */
+            border-radius: 16px;
+            box-shadow: 10px 10px 0px rgba(59, 130, 246, 0.7); /* Hiệu ứng nổi bật */
+            transition: all 0.2s;
+        }
+
+        /* Tiêu đề */
+        .header-title {
+            color: #1e3a8a; /* Xanh Navy */
+            font-weight: 800;
+            text-shadow: 2px 2px 0px #bfdbfe; /* Bóng đổ nhẹ cho chữ */
+        }
+        
+        /* Thẻ câu hỏi */
+        .question-card {
+            background-color: #fff;
+            border: 2px solid #93c5fd; /* Viền xanh nhạt */
+            border-radius: 12px;
+            box-shadow: 4px 4px 0px rgba(147, 197, 253, 0.7);
+            padding: 20px;
+        }
+        
+        /* Tùy chọn đáp án */
+        .answer-option {
+            cursor: pointer;
+            border: 2px solid #a78bfa; /* Màu tím */
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 14px;
+            transition: all 0.2s;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .answer-option:not(.disabled):hover {
+            background-color: #f3e8ff; /* Tím nhạt */
+            transform: translateY(-2px);
+            box-shadow: 2px 2px 0px #8b5cf6;
+        }
+        
+        .disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        /* Màu cho đáp án đúng/sai khi đã chấm điểm */
+        .correct {
+            background-color: #bbf7d0; /* Green 200 */
+            border-color: #10b981; /* Green 500 */
+            box-shadow: 4px 4px 0px #10b981;
+            color: #15803d; /* Text đậm */
+        }
+        
+        .wrong {
+            background-color: #fecaca; /* Red 200 */
+            border-color: #ef4444; /* Red 500 */
+            box-shadow: 4px 4px 0px #ef4444;
+            color: #b91c1c; /* Text đậm */
+        }
+
+        /* Styling cho nút bấm */
+        .action-button {
+            border: 2px solid #1e3a8a;
+            box-shadow: 4px 4px 0px #1e3a8a;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .action-button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #1e3a8a;
+        }
+        
+        /* Bộ đếm thời gian (Nổi bật) */
+        .timer-display {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            font-weight: 800;
+            border: 4px solid #ef4444; /* Viền đỏ */
+            background-color: #fee2e2; /* Nền đỏ nhạt */
+            color: #dc2626; /* Chữ đỏ đậm */
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+            text-shadow: 1px 1px 0px #fff;
+            transition: all 0.3s;
+        }
+        
+        .timer-display.running {
+            animation: pulse-red 1s infinite alternate;
+        }
+
+        .timer-display.warning {
+            background-color: #fca5a5; /* Red 300 */
+            border-color: #b91c1c;
+            color: #b91c1c;
+            font-size: 32px;
+        }
+        
+        @keyframes pulse-red {
+            from { box-shadow: 0 0 5px rgba(239, 68, 68, 0.5); }
+            to { box-shadow: 0 0 15px rgba(239, 68, 68, 1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body { font-size: 16px; }
+            .header-title { font-size: 2.25rem; }
+            .answer-option { font-size: 16px; padding: 10px; }
+            .timer-display { width: 80px; height: 80px; font-size: 24px; }
+            .card { box-shadow: 5px 5px 0px rgba(59, 130, 246, 0.7); }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container" class="max-w-4xl w-full card p-8 sm:p-10">
+
+        <h1 class="header-title text-4xl sm:text-5xl text-center mb-4">
+            Trắc Nghiệm Lịch Sử Địa Phương 11
+        </h1>
+        <p class="text-center text-xl font-medium text-indigo-700 mb-6">
+            Tìm hiểu về **Sơn Nam** và **Trần Bạch Đằng**
+        </p>
+        
+        <!-- Nút Đảo Vị Trí Câu Hỏi & Đáp Án -->
+        <div class="flex justify-center mb-8">
+            <button id="shuffle-btn" 
+                    class="action-button bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-6 rounded-lg text-lg w-full sm:w-auto transition-colors duration-200">
+                🔀 Đảo Vị Trí Câu Hỏi & Đáp Án
+            </button>
+        </div>
+
+        <!-- Thanh chuyển đổi mục (Tabs) -->
+        <div class="flex border-b-4 border-indigo-200 mb-8 rounded-t-lg overflow-hidden">
+            <button id="tab-son-nam" 
+                    class="tab-button flex-1 py-3 px-4 text-xl font-bold text-center transition-all duration-300 focus:outline-none bg-indigo-500 text-white shadow-inner"
+                    data-section="son_nam">
+                <span>Sơn Nam (15 câu)</span>
+            </button>
+            <button id="tab-tran-bach-dang" 
+                    class="tab-button flex-1 py-3 px-4 text-xl font-bold text-center text-gray-700 transition-all duration-300 focus:outline-none bg-white hover:bg-gray-100"
+                    data-section="tran_bach_dang">
+                <span>Trần Bạch Đằng (15 câu)</span>
+            </button>
+        </div>
+
+        <!-- Khu vực hiển thị câu hỏi -->
+        <div id="quiz-container">
+            <!-- Questions will be rendered here -->
+        </div>
+
+        <!-- Khu vực nút hành động và kết quả -->
+        <div id="results-area" class="mt-10 pt-6 border-t-2 border-dashed border-gray-300 flex flex-col justify-center items-center">
+            
+            <div id="score-display" class="text-3xl font-extrabold text-gray-800 mb-4 sm:mb-0 flex items-center">
+                <span class="text-indigo-600 mr-2">📊 Điểm:</span><span id="current-score">0</span> / <span id="total-questions">15</span>
+            </div>
+
+            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mt-6 w-full sm:w-auto">
+                <button id="reset-quiz-btn" 
+                        class="action-button bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-lg text-xl w-full sm:w-auto transition-colors duration-200">
+                    Làm lại (Reset)
+                </button>
+            </div>
+        </div>
+        
+        <!-- Custom Alert Box -->
+        <div id="custom-alert" class="fixed inset-0 bg-gray-900 bg-opacity-80 hidden items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl border-4 border-indigo-600">
+                <h3 class="text-2xl font-bold text-indigo-700 mb-4">🔔 Thông báo</h3>
+                <p id="alert-message" class="text-gray-700 text-lg mb-6"></p>
+                <button id="alert-ok-btn" class="action-button bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg float-right">
+                    Đã hiểu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Khai báo dữ liệu trắc nghiệm
+        const quizData = {
+            son_nam: [
+                { id: 1, question: "TÊN THẬT CỦA NHÀ VĂN SƠN NAM LÀ GÌ?", answers: { A: "PHẠM MINH TẦY", B: "ĐÔNG THÁI", C: "PHẠM MINH TÀY", D: "ĐÔNG THÁI – PHẠM MINH TÀY", E: "PHẠM MINH TÀY" }, correct: "E" },
+                { id: 2, question: "ÔNG SƠN NAM SINH NĂM BAO NHIÊU?", answers: { A: "1915", B: "1920", C: "1926", D: "1930", E: "1935" }, correct: "C" },
+                { id: 3, question: "ÔNG SƠN NAM QUÊ Ở ĐÂU?", answers: { A: "RẠCH GIÁ, KIÊN GIANG", B: "CÀ MAU", C: "SÓC TRĂNG", D: "MỸ THO", E: "AN GIANG" }, correct: "A" },
+                { id: 4, question: "BIỆT DANH CỦA ÔNG SƠN NAM LÀ GÌ?", answers: { A: "ÔNG GIÀ NAM BỘ", B: "NHÀ NAM BỘ HỌC", C: "NHÀ VĂN HÓA PHƯƠNG NAM", D: "NHÀ SƯU TẦM DÂN GIAN", E: "NHÀ NHÂN HỌC MIỀN TÂY" }, correct: "B" },
+                { id: 5, question: "TÁC PHẨM NỔI TIẾNG NHẤT CỦA SƠN NAM LÀ GÌ?", answers: { A: "HƯƠNG RỪNG CÀ MAU", B: "CHIM QUYÊN XUỐNG ĐẤT", C: "VẠCH MỘT CHÂN TRỜI", D: "HÌNH BÓNG CŨ", E: "CON ĐÒ THỦ THIÊM" }, correct: "A" },
+                { id: 6, question: "THỂ LOẠI CHỦ YẾU TRONG SÁNG TÁC CỦA ÔNG LÀ GÌ?", answers: { A: "TIỂU THUYẾT", B: "TRUYỆN NGẮN", C: "KÍ", D: "THƠ", E: "TIỂU LUẬN" }, correct: "C" },
+                { id: 7, question: "ÔNG SƠN NAM THƯỜNG VIẾT VỀ ĐỀ TÀI GÌ?", answers: { A: "NGƯỜI NAM BỘ", B: "CHIẾN TRANH", C: "TÌNH YÊU", D: "TÂM LINH", E: "VĂN HÓA KINH TẾ" }, correct: "A" },
+                { id: 8, question: "NHÀ VĂN SƠN NAM ĐƯỢC MỆNH DANH LÀ GÌ?", answers: { A: "NHÀ NAM BỘ HỌC", B: "NHÀ NAM BỘ LỌC", C: "NHÀ NAM HỌC", D: "NHÀ NAM SỬ", E: "NHÀ VĂN HÓA NAM BỘ" }, correct: "A" },
+                { id: 9, question: "ÔNG NHẬN GIẢI MAI VÀNG NĂM NÀO?", answers: { A: "1997", B: "1998", C: "1999", D: "2000", E: "2001" }, correct: "C" },
+                { id: 10, question: "NHỮNG TÁC PHẨM NỔI BẬT CỦA SƠN NAM?", answers: { A: "HƯƠNG RỪNG CÀ MAU, HÌNH BÓNG CŨ", B: "VẠCH MỘT CHÂN TRỜI, LÚA REO", C: "CHIM QUYÊN XUỐNG ĐẤT, CON ĐÒ THỦ THIÊM", D: "CẢ A VÀ B", E: "CẢ A, B, C" }, correct: "E" },
+                { id: 11, question: "SƠN NAM QUA ĐỜI NĂM NÀO?", answers: { A: "2006", B: "2007", C: "2008", D: "2009", E: "2010" }, correct: "C" },
+                { id: 12, question: "ÔNG LÀ NGƯỜI GẮN BÓ VỚI KHU VỰC NÀO NHIỀU NHẤT?", answers: { A: "MIỀN TÂY NAM BỘ", B: "ĐÔNG NAM BỘ", C: "TRUNG BỘ", D: "BẮC BỘ", E: "TÂY NGUYÊN" }, correct: "A" },
+                { id: 13, question: "TÁC PHẨM 'HƯƠNG RỪNG CÀ MAU' ĐƯỢC XEM LÀ TẬP GÌ?", answers: { A: "TRUYỆN NGẮN", B: "TIỂU THUYẾT", C: "KÍ SỰ", D: "TÙY BÚT", E: "HỒI KÍ" }, correct: "A" },
+                { id: 14, question: "NHÀ VĂN SƠN NAM MẤT TẠI ĐÂU?", answers: { A: "THÀNH PHỐ HỒ CHÍ MINH", B: "CÀ MAU", C: "RẠCH GIÁ", D: "HÀ NỘI", E: "MỸ THO" }, correct: "A" },
+                { id: 15, question: "PHONG CÁCH SÁNG TÁC CỦA ÔNG THƯỜNG ĐƯỢC NHẬN XÉT NHƯ THẾ NÀO?", answers: { A: "MỘC MẠC, GIẢN DỊ, ĐẬM CHẤT NAM BỘ", B: "HÀO HOA, BÓNG BẨY", C: "LÃNG MẠN, BAY BỔNG", D: "HÀI HƯỚC, TRÀO PHÚNG", E: "TRỮ TÌNH, U MỊ" }, correct: "A" }
+            ],
+            tran_bach_dang: [
+                { id: 16, question: "TÊN THẬT CỦA TRẦN BẠCH ĐẰNG LÀ GÌ?", answers: { A: "TRƯƠNG GIA TẤN", B: "TRƯƠNG GIA TIÊU", C: "TRƯƠNG GIA TRIỀU", D: "TRƯỜNG GIÁ TRẦN", E: "TRƯỜNG GIẢ BẢO" }, correct: "A" },
+                { id: 17, question: "ÔNG SINH NĂM BAO NHIÊU?", answers: { A: "1924", B: "1925", C: "1926", D: "1927", E: "1928" }, correct: "B" },
+                { id: 18, question: "ÔNG QUÊ Ở ĐÂU?", answers: { A: "LÀNG THẠNH HƯNG, GIỒNG RIỀNG, RẠCH GIÁ", B: "LÀNG HƯNG THỊNH, RẠCH GIÁ", C: "CẦN THƠ", D: "MỸ THO", E: "AN GIANG" }, correct: "A" },
+                { id: 19, question: "TRẦN BẠCH ĐẰNG THAM GIA CÁCH MẠNG TỪ KHI NÀO?", answers: { A: "15 TUỔI", B: "16 TUỔI", C: "17 TUỔI", D: "18 TUỔI", E: "19 TUỔI" }, correct: "B" },
+                { id: 20, question: "CÔNG TÁC BÁO CHÍ ÔNG GẮN BÓ VỚI TỜ BÁO NÀO?", answers: { A: "BÁO SÀI GÒN GIẢI PHÓNG", B: "BÁO NHÂN DÂN", C: "BÁO THANH NIÊN", D: "BÁO TUỔI TRẺ", E: "BÁO TIỀN PHONG" }, correct: "A" },
+                { id: 21, question: "TÁC PHẨM NỔI TIẾNG NHẤT CỦA ÔNG LÀ GÌ?", answers: { A: "VÁN BÀI LẬT NGỬA", B: "BÍ THƯ TỈNH ỦY", C: "CHÂN DUNG MỘT QUẢN ĐỐC", D: "BÁC SÁU RỒNG", E: "NGÀY VỀ CỦA NGOẠI" }, correct: "A" },
+                { id: 22, question: "BÚT DANH CỦA ÔNG LÀ GÌ?", answers: { A: "TƯ ÁNH", B: "HƯƠNG TRIỀU", C: "NGUYỄN TRƯỜNG THIÊN LÝ", D: "CẢ A, B, C", E: "KHÔNG CÓ" }, correct: "D" },
+                { id: 23, question: "ÔNG TỪNG GIỮ CHỨC VỤ GÌ SAU 1975?", answers: { A: "BÍ THƯ THÀNH ỦY TP.HCM", B: "CHỦ TỊCH UBND TP.HCM", C: "PHÓ TỔNG BIÊN TẬP BÁO NHÂN DÂN", D: "GIÁM ĐỐC NHÀ XUẤT BẢN TRẺ", E: "CHỦ NHIỆM ỦY BAN VĂN HÓA" }, correct: "A" },
+                { id: 24, question: "ÔNG MẤT NĂM NÀO?", answers: { A: "2005", B: "2006", C: "2007", D: "2008", E: "2009" }, correct: "C" },
+                { id: 25, question: "ÔNG MẤT DO NGUYÊN NHÂN GÌ?", answers: { A: "UNG THƯ PHỔI", B: "BỆNH TIM", C: "TAI NẠN", D: "TUỔI GIÀ", E: "BỆNH GAN" }, correct: "A" },
+                { id: 26, question: "TÁC PHẨM NÀO CỦA ÔNG ĐƯỢC CHUYỂN THỂ THÀNH PHIM NỔI TIẾNG?", answers: { A: "VÁN BÀI LẬT NGỬA", B: "BÍ THƯ TỈNH ỦY", C: "CHÂN DUNG MỘT QUẢN ĐỐC", D: "BÁC SÁU RỒNG", E: "ĐẤT PHƯƠNG NAM" }, correct: "A" },
+                { id: 27, question: "ÔNG ĐƯỢC BIẾT ĐẾN LÀ NGƯỜI NHƯ THẾ NÀO?", answers: { A: "KIÊN TRUNG, SẮC SẢO, GIẢN DỊ", B: "ĐIỀM ĐẠM, HÀI HƯỚC", C: "HÀO HOA, BÓNG BẨY", D: "LÃNG MẠN, TỰ TIN", E: "U MỊ, TRỮ TÌNH" }, correct: "A" },
+                { id: 28, question: "ÔNG CÓ ĐÓNG GÓP GÌ CHO LĨNH VỰC VĂN HÓA?", answers: { A: "BIÊN SOẠN CÁC ĐỊA CHÍ VÀ LỊCH SỬ NAM BỘ", B: "VIẾT THƠ", C: "DỊCH VĂN HỌC PHÁP", D: "VIẾT TRUYỆN THIẾU NHI", E: "VIẾT KỊCH" }, correct: "A" },
+                { id: 29, question: "MỘT TRONG NHỮNG ĐẶC ĐIỂM CHÍNH TRONG SÁNG TÁC CỦA ÔNG LÀ GÌ?", answers: { A: "TÍNH CHÍNH LUẬN, HIỆN THỰC, GẮN VỚI CÁCH MẠNG", B: "TÍNH TRỮ TÌNH, LÃNG MẠN", C: "TÍNH HÀI HƯỚC", D: "TÍNH PHIÊU LƯU", E: "TÍNH GIẢ TƯỞNG" }, correct: "A" },
+                { id: 30, question: "TÁC PHẨM 'VÁN BÀI LẬT NGỬA' CỦA ÔNG MIÊU TẢ NHÂN VẬT NÀO?", answers: { A: "ĐIỆP VIÊN TÌNH BÁO PHẠM NGỌC THẢO", B: "TRẦN PHÚ", C: "VÕ NGUYÊN GIÁP", D: "PHẠM HỒNG THÁI", E: "TRẦN VĂN TRÀ" }, correct: "A" }
+            ]
+        };
+
+        let currentSection = 'son_nam';
+        let userAnswers = {}; // Lưu trữ đáp án đã trả lời: { 'q-1': { answer: 'A', correct: true } }
+        let questionTimers = {}; // { qId: intervalId }
+        // Biến lưu trữ thứ tự hiện tại của các câu hỏi (sau khi xáo trộn hoặc nguyên bản)
+        let currentQuizOrder = {}; 
+
+        const quizContainer = document.getElementById('quiz-container');
+        const scoreDisplay = document.getElementById('current-score');
+        const totalQuestions = document.getElementById('total-questions');
+        const tabs = document.querySelectorAll('.tab-button');
+        const resetQuizBtn = document.getElementById('reset-quiz-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn'); // Nút xáo trộn
+
+        const customAlert = document.getElementById('custom-alert');
+        const alertMessage = document.getElementById('alert-message');
+        const alertOkBtn = document.getElementById('alert-ok-btn');
+
+        const initialTime = 60; // 60 giây cho mỗi câu hỏi
+
+        // --- Các hàm tiện ích ---
+
+        // Hàm xáo trộn mảng (thuật toán Fisher-Yates)
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            let newArray = [...array]; // Clone mảng để không thay đổi dữ liệu gốc
+            
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [newArray[currentIndex], newArray[randomIndex]] = [
+                    newArray[randomIndex], newArray[currentIndex]
+                ];
+            }
+            return newArray;
+        }
+
+        // Hàm hiển thị hộp thoại thông báo tùy chỉnh
+        function showAlert(message) {
+            alertMessage.textContent = message;
+            customAlert.classList.remove('hidden');
+            customAlert.classList.add('flex');
+        }
+
+        // Đóng hộp thoại thông báo
+        alertOkBtn.addEventListener('click', () => {
+            customAlert.classList.add('hidden');
+            customAlert.classList.remove('flex');
+        });
+
+        // --- Các hàm logic Quiz ---
+
+        // Hàm lấy danh sách câu hỏi hiện tại (đã xáo trộn hoặc nguyên bản)
+        function getCurrentQuestions(isInitial = false) {
+            // Nếu isInitial là true hoặc chưa có thứ tự nào được lưu cho section này
+            if (isInitial || !currentQuizOrder[currentSection]) {
+                const originalQuestions = quizData[currentSection];
+                
+                // Khởi tạo cấu trúc shuffled_options cho lần đầu
+                const structuredQuestions = originalQuestions.map(q => {
+                    const keys = Object.keys(q.answers);
+                    const originalOptions = {};
+                    // Duy trì thứ tự ban đầu cho đến khi có yêu cầu xáo trộn
+                    keys.forEach((originalKey, index) => {
+                        const displayKey = String.fromCharCode(65 + index);
+                        originalOptions[displayKey] = {
+                            text: q.answers[originalKey],
+                            originalKey: originalKey // Lưu lại key gốc để chấm điểm
+                        };
+                    });
+                    return { ...q, shuffled_options: originalOptions };
+                });
+                
+                // Lưu lại và trả về
+                currentQuizOrder[currentSection] = structuredQuestions;
+            }
+            return currentQuizOrder[currentSection];
+        }
+
+
+        // Hàm xáo trộn thứ tự câu hỏi và các lựa chọn đáp án
+        function shuffleQuestionsAndOptions() {
+            // 1. Dừng tất cả các timer đang chạy
+            for (const qId in questionTimers) {
+                stopTimer(parseInt(qId));
+            }
+
+            // 2. Lấy danh sách câu hỏi đã được cấu trúc (có shuffled_options)
+            const questionsToShuffle = getCurrentQuestions(true); 
+            
+            // 3. Xáo trộn thứ tự câu hỏi
+            const shuffledQuestions = shuffleArray(questionsToShuffle);
+
+            // 4. Xáo trộn các lựa chọn đáp án trong mỗi câu
+            const fullyShuffledQuiz = shuffledQuestions.map(q => {
+                // Lấy các key hiển thị (A, B, C, D, E)
+                const displayKeys = Object.keys(q.shuffled_options);
+                
+                // Lấy các đối tượng option (chứa text và originalKey)
+                const optionObjects = displayKeys.map(key => q.shuffled_options[key]);
+                
+                // Xáo trộn các đối tượng option
+                const shuffledOptionObjects = shuffleArray(optionObjects);
+
+                // Tạo lại đối tượng shuffled_options với key A, B, C... mới
+                const newShuffledOptions = {};
+                shuffledOptionObjects.forEach((optionData, index) => {
+                    const newDisplayKey = String.fromCharCode(65 + index); 
+                    newShuffledOptions[newDisplayKey] = optionData;
+                });
+                
+                // Trả về câu hỏi với lựa chọn đáp án đã được xáo trộn
+                return {
+                    ...q,
+                    shuffled_options: newShuffledOptions
+                };
+            });
+            
+            // Cập nhật thứ tự hiển thị
+            currentQuizOrder[currentSection] = fullyShuffledQuiz;
+            
+            // Rerender quiz
+            renderQuiz();
+            showAlert('Đã đảo vị trí thành công! Thứ tự câu hỏi và các lựa chọn đáp án đã được trộn ngẫu nhiên.');
+        }
+
+        // Hàm tính lại tổng điểm
+        function calculateTotalScore() {
+            let score = 0;
+            const questions = getCurrentQuestions();
+            questions.forEach(q => {
+                const answeredData = userAnswers[`q-${q.id}`];
+                if (answeredData && answeredData.correct) {
+                    score++;
+                }
+            });
+            return score;
+        }
+
+        // Cập nhật hiển thị điểm
+        function updateScoreDisplay() {
+            const questions = getCurrentQuestions();
+            const currentScore = calculateTotalScore();
+            scoreDisplay.textContent = currentScore;
+            totalQuestions.textContent = questions.length;
+        }
+
+        // Hàm dừng đồng hồ
+        function stopTimer(questionId) {
+            if (questionTimers[questionId]) {
+                clearInterval(questionTimers[questionId]);
+                delete questionTimers[questionId];
+            }
+        }
+
+        // Hàm bắt đầu đồng hồ
+        function startTimer(qId) {
+            stopTimer(qId);
+            let timeLeft = initialTime;
+            const timerElement = document.getElementById(`timer-${qId}`);
+            const startButton = document.getElementById(`start-btn-${qId}`);
+            const questionOptionsContainer = document.querySelector(`.question-options-container[data-question-id="${qId}"]`);
+            const feedbackElement = document.getElementById(`feedback-${qId}`);
+
+            if (!timerElement || !startButton || !questionOptionsContainer) return;
+
+            // Ẩn nút Bắt đầu
+            startButton.style.display = 'none';
+
+            // Cập nhật trạng thái hiển thị của Timer
+            timerElement.textContent = `${timeLeft}s`;
+            timerElement.classList.remove('hidden', 'bg-gray-400', 'border-gray-600', 'text-gray-800');
+            timerElement.classList.add('flex', 'running'); 
+            timerElement.classList.remove('warning'); 
+
+            // Kích hoạt các lựa chọn đáp án
+            questionOptionsContainer.classList.remove('disabled');
+
+            questionTimers[qId] = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = `${timeLeft}s`;
+
+                if (timeLeft <= 10) {
+                    timerElement.classList.add('warning');
+                } else {
+                    timerElement.classList.remove('warning');
+                }
+
+                if (timeLeft <= 0) {
+                    stopTimer(qId);
+                    
+                    questionOptionsContainer.classList.add('disabled');
+                    timerElement.textContent = 'Hết giờ!';
+                    timerElement.classList.remove('running', 'warning');
+                    timerElement.classList.add('bg-gray-400', 'border-gray-600', 'text-gray-800');
+                    
+                    const questions = getCurrentQuestions();
+                    const questionData = questions.find(q => q.id === qId);
+
+                    if (!userAnswers[`q-${qId}`]) {
+                         userAnswers[`q-${qId}`] = { answer: null, correct: false, timedOut: true };
+                         // Tìm display key đúng để hiển thị trong feedback
+                         const correctDisplayKey = Object.keys(questionData.shuffled_options).find(
+                            key => questionData.shuffled_options[key].originalKey === questionData.correct
+                         );
+                         feedbackElement.innerHTML = `<p class="mt-3 text-red-600 font-bold text-lg">❌ **Hết giờ!** Đáp án đúng là **${correctDisplayKey}**.</p>`;
+                         renderCorrectAnswer(qId);
+                    }
+                    
+                    const questionNumber = questions.findIndex(q => q.id === qId) + 1;
+                    showAlert(`Hết giờ cho Câu hỏi số ${questionNumber}!`);
+                }
+            }, 1000);
+        }
+
+        // Hàm hiển thị đáp án đúng sau khi trả lời sai hoặc hết giờ
+        function renderCorrectAnswer(qId) {
+            const questions = getCurrentQuestions();
+            const question = questions.find(q => q.id === qId);
+            if (!question) return;
+
+            // Tìm display key đúng (A, B, C...)
+            const correctDisplayKey = Object.keys(question.shuffled_options).find(
+                key => question.shuffled_options[key].originalKey === question.correct
+            );
+
+            const correctOption = document.querySelector(`.answer-option[data-question-id="${qId}"][data-answer="${correctDisplayKey}"]`);
+
+            if (correctOption) {
+                 // Đảm bảo đáp án đúng được làm nổi bật (nếu chưa được chọn)
+                correctOption.classList.add('correct');
+                const optionData = question.shuffled_options[correctDisplayKey];
+                correctOption.innerHTML = `<span class="font-bold mr-3 text-indigo-700">${correctDisplayKey}.</span> <span class="flex-1 text-gray-700">${optionData.text}</span> 
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 ml-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>`;
+            }
+
+            updateScoreDisplay();
+        }
+
+        // Xử lý sự kiện chọn đáp án và chấm điểm tức thì
+        function handleAnswerSelection(event) {
+            const selectedOption = event.currentTarget;
+            const questionId = parseInt(selectedOption.dataset.questionId);
+            const displayKey = selectedOption.dataset.answer; // Display key (A, B, C...)
+            const questionOptionsContainer = document.querySelector(`.question-options-container[data-question-id="${questionId}"]`);
+            const feedbackElement = document.getElementById(`feedback-${questionId}`);
+            
+            const questions = getCurrentQuestions();
+            const questionData = questions.find(q => q.id === questionId);
+            
+            if (!questionOptionsContainer || questionOptionsContainer.classList.contains('disabled')) {
+                showAlert("Vui lòng nhấn 'Bắt đầu' để kích hoạt bộ đếm thời gian.");
+                return; 
+            }
+            
+            // Dừng timer ngay lập tức
+            stopTimer(questionId);
+            document.getElementById(`timer-${questionId}`).classList.remove('running', 'warning');
+            document.getElementById(`timer-${questionId}`).textContent = 'Đã xong';
+
+            // Vô hiệu hóa lựa chọn cho câu hỏi này
+            questionOptionsContainer.classList.add('disabled');
+            
+            // Lấy dữ liệu đáp án đã xáo trộn
+            const selectedOptionData = questionData.shuffled_options[displayKey];
+            const selectedOriginalKey = selectedOptionData.originalKey; 
+            
+            // Kiểm tra tính đúng đắn dựa trên originalKey
+            const isCorrect = selectedOriginalKey === questionData.correct;
+            
+            // Lưu kết quả (lưu displayKey mà người dùng đã chọn)
+            userAnswers[`q-${questionId}`] = { answer: displayKey, correct: isCorrect, timedOut: false };
+
+            // Tìm display key đúng để hiển thị feedback
+            const correctDisplayKey = Object.keys(questionData.shuffled_options).find(
+                key => questionData.shuffled_options[key].originalKey === questionData.correct
+            );
+
+            // Hiển thị feedback
+            if (isCorrect) {
+                selectedOption.classList.add('correct');
+                feedbackElement.innerHTML = `
+                    <p class="mt-3 text-green-600 font-extrabold text-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                        🎉 **Chính xác!**
+                    </p>
+                `;
+            } else {
+                selectedOption.classList.add('wrong');
+                feedbackElement.innerHTML = `
+                    <p class="mt-3 text-red-600 font-extrabold text-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                        **Sai rồi!** Đáp án đúng là **${correctDisplayKey}**.
+                    </p>
+                `;
+                renderCorrectAnswer(questionId); // Highlight đáp án đúng
+            }
+
+            // Cập nhật tổng điểm
+            updateScoreDisplay();
+        }
+
+        // Hàm render câu hỏi
+        function renderQuiz() {
+            const questions = getCurrentQuestions(); // Lấy danh sách đã được sắp xếp/xáo trộn
+            totalQuestions.textContent = questions.length;
+            quizContainer.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const questionNumber = index + 1;
+                const globalQuestionId = q.id;
+                const answeredData = userAnswers[`q-${globalQuestionId}`];
+                const isAnswered = !!answeredData;
+                
+                // Tìm display key đúng (A, B, C...) để sử dụng trong feedback
+                const correctDisplayKey = Object.keys(q.shuffled_options).find(
+                    key => q.shuffled_options[key].originalKey === q.correct
+                );
+                
+                const qDiv = document.createElement('div');
+                qDiv.className = 'question-card bg-white p-6 rounded-xl mb-8';
+                
+                // Hiển thị phần câu hỏi, timer và nút Start
+                let timerHtml = `
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 border-b pb-4 border-gray-200">
+                        <p class="text-xl sm:text-2xl font-extrabold text-gray-800 flex-1 mb-4 sm:mb-0">
+                            <span class="text-indigo-600 mr-3">${questionNumber}.</span> ${q.question}
+                        </p>
+                        
+                        <div class="flex flex-col items-center justify-center space-y-2">
+                            <!-- Hiển thị Timer hoặc nút Start -->
+                            ${!isAnswered ? `
+                                <div id="timer-${globalQuestionId}" class="timer-display hidden">60s</div>
+                                <button id="start-btn-${globalQuestionId}" 
+                                        data-id="${globalQuestionId}" 
+                                        class="start-timer-btn action-button bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg text-lg transition-colors duration-200">
+                                    ▶ Bắt đầu (60s)
+                                </button>
+                            ` : `
+                                <div id="timer-${globalQuestionId}" class="timer-display bg-gray-200 border-gray-400 text-gray-700">Đã xong</div>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                qDiv.innerHTML += timerHtml;
+                
+                // Khu vực chứa các lựa chọn đáp án (đã xáo trộn)
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = `question-options-container ${isAnswered ? 'disabled' : 'disabled'} mt-4` ;
+                optionsDiv.dataset.questionId = globalQuestionId;
+
+                // Lặp qua các displayKey (A, B, C, D, E) đã xáo trộn
+                for (const displayKey in q.shuffled_options) {
+                    const optionData = q.shuffled_options[displayKey];
+                    const answerText = optionData.text;
+
+                    const isSelected = isAnswered && answeredData.answer === displayKey;
+                    const isCorrect = isAnswered && answeredData.correct && isSelected;
+                    const isWrongSelection = isAnswered && !answeredData.correct && isSelected;
+                    // Highlight đáp án đúng nếu câu trả lời sai hoặc hết giờ
+                    const isCorrectHighlight = isAnswered && !answeredData.correct && displayKey === correctDisplayKey; 
+
+                    let optionClass = 'answer-option flex items-center mb-2 transition-all';
+                    
+                    if (isCorrect || isCorrectHighlight) {
+                        optionClass += ' correct';
+                    } else if (isWrongSelection) {
+                        optionClass += ' wrong';
+                    } else if (isSelected) {
+                        optionClass += ' bg-indigo-200 border-indigo-500';
+                    } else {
+                        optionClass += ' bg-white hover:bg-gray-50';
+                    }
+
+                    const iconHtml = (isCorrect || isCorrectHighlight) ? 
+                        '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600 ml-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>' : 
+                        (isWrongSelection ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600 ml-auto" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>' : '');
+
+
+                    const optionHtml = `
+                        <div class="answer-option flex items-center mb-2 ${optionClass}" data-question-id="${globalQuestionId}" data-answer="${displayKey}">
+                            <span class="font-bold mr-3 text-indigo-700">${displayKey}.</span> 
+                            <span class="flex-1 text-gray-700">${answerText}</span>
+                            ${iconHtml}
+                        </div>
+                    `;
+                    optionsDiv.innerHTML += optionHtml;
+                }
+                
+                qDiv.appendChild(optionsDiv);
+                
+                // Khu vực Feedback
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.id = `feedback-${globalQuestionId}`;
+                feedbackDiv.className = 'feedback-area mt-4 pt-3 border-t border-dashed';
+                
+                if (isAnswered) {
+                     if (answeredData.correct) {
+                        feedbackDiv.innerHTML = `
+                            <p class="mt-3 text-green-600 font-extrabold text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                                🎉 **Chính xác!**
+                            </p>
+                        `;
+                    } else if (answeredData.timedOut) {
+                        feedbackDiv.innerHTML = `<p class="mt-3 text-red-600 font-extrabold text-lg">❌ **Hết giờ!** Đáp án đúng là **${correctDisplayKey}**.</p>`;
+                    }
+                     else {
+                         feedbackDiv.innerHTML = `
+                            <p class="mt-3 text-red-600 font-extrabold text-lg flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                                **Sai rồi!** Đáp án đúng là **${correctDisplayKey}**.
+                            </p>
+                        `;
+                    }
+                }
+                
+                qDiv.appendChild(feedbackDiv);
+                quizContainer.appendChild(qDiv);
+            });
+            
+            // Gắn lại event listener
+            attachEventListeners();
+        }
+
+        // Gắn tất cả event listeners
+        function attachEventListeners() {
+            document.querySelectorAll('.answer-option').forEach(option => {
+                const qId = parseInt(option.dataset.questionId);
+                if (!userAnswers[`q-${qId}`]) {
+                    option.addEventListener('click', handleAnswerSelection);
+                }
+            });
+
+            document.querySelectorAll('.start-timer-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const qId = parseInt(e.currentTarget.dataset.id);
+                    startTimer(qId);
+                });
+            });
+        }
+
+        // Xử lý chuyển tab
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const newSection = e.currentTarget.dataset.section;
+                if (newSection !== currentSection) {
+                    // Dừng tất cả các timer đang chạy khi chuyển tab
+                    for (const qId in questionTimers) {
+                        stopTimer(parseInt(qId));
+                    }
+
+                    currentSection = newSection;
+                    
+                    tabs.forEach(t => {
+                        if (t.dataset.section === currentSection) {
+                            t.classList.remove('bg-white', 'hover:bg-gray-100', 'text-gray-700');
+                            t.classList.add('bg-indigo-500', 'text-white', 'shadow-inner');
+                        } else {
+                            t.classList.remove('bg-indigo-500', 'text-white', 'shadow-inner');
+                            t.classList.add('bg-white', 'hover:bg-gray-100', 'text-gray-700');
+                        }
+                    });
+
+                    // Khởi tạo thứ tự quiz cho section mới nếu chưa có
+                    getCurrentQuestions();
+
+                    renderQuiz();
+                    updateScoreDisplay();
+                }
+            });
+        });
+
+
+        // Hàm làm lại (Reset)
+        function resetQuiz() {
+            // Dừng tất cả các timer đang chạy
+            for (const qId in questionTimers) {
+                stopTimer(parseInt(qId));
+            }
+            
+            userAnswers = {};
+            
+            // Đặt lại thứ tự hiển thị về trạng thái ban đầu (nhưng vẫn dùng cấu trúc mới)
+            currentQuizOrder[currentSection] = getCurrentQuestions(true); 
+            
+            renderQuiz(); 
+            updateScoreDisplay();
+            showAlert('Đã reset toàn bộ câu trả lời và điểm số. Bạn có thể bắt đầu lại!');
+        }
+
+        // Gắn sự kiện cho nút làm lại và nút xáo trộn
+        resetQuizBtn.addEventListener('click', resetQuiz);
+        shuffleBtn.addEventListener('click', shuffleQuestionsAndOptions);
+
+        // Khởi tạo ứng dụng
+        window.onload = function() {
+            getCurrentQuestions(); // Khởi tạo cấu trúc dữ liệu ban đầu
+            renderQuiz();
+            updateScoreDisplay();
+        };
+
+    </script>
+</body>
+</html>
